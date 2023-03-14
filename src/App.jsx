@@ -1,34 +1,96 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState } from 'react';
+import { confetti } from 'canvas-cofetti';
+
+import { Square } from './components/Square';
+import { TURNS } from './constants.js';
+import { checkWinnerFrom, checkEndGame } from './logic/board';
+import { WinnerModal } from './components/WinnerModal';
+import { saveGameToStorage, resetGameStorage } from './logic/'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [board, setBoard] = useState(() => {
+    const boardFromStorage = window.localStorage.getItem('board');
+    if(boardFromStorage) return JSON.parse(boardFromStorage);
+    return Array(9).fill(null);
+  });
+
+  const [turn, setTurn] = useState(() => {
+    const turnFromStorage = window.localStorage.getItem('turn');
+    return turnFromStorage ?? TURNS.X;
+  });
+
+  // null is that there is no winner, false is that there is a tie
+  const [winner, setWinner] = useState(null);
+
+  const resetGame = () => {
+    setBoard(Array(9).fill(null));
+    setTurn(TURNS.X);
+    setWinner(null);
+
+    resetGameStorage();
+  };
+
+  const updateBoard = (index) => {
+    // we do not update this position if you already have something
+    if(board[index] || winner) return;
+    // update the board
+    const newBoard = [...board];
+    newBoard[index] = turn;
+    setBoard(newBoard);
+    // change the shift
+    const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X;
+    setTurn(newTurn);
+    // save game here
+    saveGameToStorage({
+      board: newBoard,
+      turn: newTurn
+    });
+    // check for winner
+    const newWinner = checkWinnerFrom(newBoard);
+    if (newWinner) {
+      confetti();
+      setWinner(newWinner);
+    } else if (checkEndGame(newBoard)) {
+      setWinner(false); // tie
+    }
+  }
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
+    <main className='board'>
+      <h1>Tic Tac Toe Game</h1>
+      <button onClick={resetGame}>Reset game</button>
+      <section className='game'>
+        {
+          board.map((square, index) => {
+            return (
+              <Square
+                key={index}
+                index={index}
+                updateBoard={updateBoard}
+              >
+                {square}
+              </Square>  
+            )
+          })
+        }
+      </section>
+
+      <section className='turn'>
+        <Square isSelected={turn === TURNS.X}>
+          {TURNS.X}
+        </Square>
+        <Square isSelected={turn === TURNS.O}>
+          {TURNS.O}
+        </Square>
+      </section>
+
+      <WinnerModal 
+      resetGame={resetGame} 
+      winner={winner} 
+      />
+    </main>
   )
 }
 
-export default App
+export default App;
