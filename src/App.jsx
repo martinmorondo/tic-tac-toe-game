@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { confetti } from 'canvas-cofetti';
+import confetti from 'canvas-confetti';
 
 import { Square } from './components/Square';
 import { TURNS } from './constants.js';
 import { checkWinnerFrom, checkEndGame } from './logic/board';
 import { WinnerModal } from './components/WinnerModal';
-import { saveGameToStorage, resetGameStorage } from './logic/'
+import { saveGameToStorage, resetGameStorage } from './logic/storage/index';
 
 function App() {
 
