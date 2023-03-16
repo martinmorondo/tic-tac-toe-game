@@ -17,7 +17,7 @@ export const checkWinnerFrom = (boardToCheck) => {
     return null;
 };
 
-export const chekEndGame = (newBoard) => {
+export const checkEndGame = (newBoard) => {
     // we check if there is a tie
     // if there are no more empty spaces on the board
     return newBoard.every((square) => square !== null);
